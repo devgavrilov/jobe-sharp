@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Text.RegularExpressions;
 using JobeSharp.Languages.Abstract;
 using JobeSharp.Languages.Versions;
@@ -12,6 +11,22 @@ namespace JobeSharp.Languages.Concrete
         
         protected override IVersionProvider VersionProvider => 
             new CommandRegexVersionProvider("java -version", new Regex("version \"([\\d.]+)\""));
+
+        private Regex ClassNameParseRegex { get; } = new Regex(
+            "(^|\\W)public\\s+class\\s+(\\w+)[^{]*\\{.*?(public\\s+static|static\\s+public)\\s+void\\s+main\\s*\\(\\s*String",
+            RegexOptions.Multiline | RegexOptions.Singleline);
+
+        public override string GetCorrectSourceFileName(ExecutionTask task)
+        {
+            return $"{TryParseMainClassNameFromSource(task)}.java";
+        }
+
+        private string TryParseMainClassNameFromSource(ExecutionTask task)
+        {
+            var result = ClassNameParseRegex.Match(task.SourceCode);
+
+            return result.Success ? result.Groups[2].Value : task.SourceFileName.Replace(".java", "");
+        }
 
         public string GetCompilationCommand(ExecutionTask task)
         {

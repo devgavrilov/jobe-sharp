@@ -11,5 +11,10 @@ namespace JobeSharp.Languages.Abstract
         public bool IsInstalled => VersionProvider.CheckAnyVersionExistence();
 
         protected abstract IVersionProvider VersionProvider { get; }
+
+        public virtual string GetCorrectSourceFileName(ExecutionTask task)
+        {
+            return task.SourceFileName;
+        }
     }
 }

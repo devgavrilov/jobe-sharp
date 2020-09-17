@@ -5,5 +5,7 @@
         string Name { get; }
         string Version { get; }
         bool IsInstalled { get; }
+
+        string GetCorrectSourceFileName(ExecutionTask task);
     }
 }

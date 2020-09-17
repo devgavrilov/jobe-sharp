@@ -24,6 +24,7 @@ namespace JobeSharp.Languages
 
         public ExecutionResult Execute()
         {
+            Task.SourceFileName = Task.Language.GetCorrectSourceFileName(Task);
             LoadFiles();
             return Task.Language switch
             {

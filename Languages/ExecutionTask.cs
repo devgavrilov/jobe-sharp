@@ -3,7 +3,7 @@ using JobeSharp.Languages.Abstract;
 
 namespace JobeSharp.Languages
 {
-    internal class ExecutionTask
+    public class ExecutionTask
     {
         public ILanguage Language { get; set; }
         public string SourceCode { get; set; }

@@ -46,7 +46,7 @@ namespace JobeSharp.Controllers
                     CmpInfo = "",
                     StdErr = result.Error,
                     StdOut = result.Output,
-                    RunId = "",
+                    RunId = null,
                     Outcome = GetOutcomeByExecutionResult(result),
                 }),
                 CompileExecutionResult _ => Ok(new ResultDto
@@ -54,7 +54,7 @@ namespace JobeSharp.Controllers
                     CmpInfo = result.Error,
                     StdErr = "",
                     StdOut = result.Output,
-                    RunId = "",
+                    RunId = null,
                     Outcome = GetOutcomeByExecutionResult(result),
                 }),
                 _ => throw new NotImplementedException()
