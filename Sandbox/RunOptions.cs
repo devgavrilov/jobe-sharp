@@ -20,6 +20,7 @@ namespace JobeSharp.Sandbox
         public int StreamSizeKb { get; set; }
         public string OutExitFile { get; set; }
         public string OutTimeFile { get; set; }
+        public string WorkingDirectory { get; set; }
         
         public string ToArgumentsString()
         {

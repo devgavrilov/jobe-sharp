@@ -22,6 +22,7 @@ namespace JobeSharp.Sandbox
             {
                 FileName = $"{Environment.CurrentDirectory}/Sandbox/RunGuard/runguard",
                 Arguments = $"{runOptions?.ToArgumentsString()} {commandFilePath} {arguments}",
+                WorkingDirectory = runOptions?.WorkingDirectory ?? Environment.CurrentDirectory,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,

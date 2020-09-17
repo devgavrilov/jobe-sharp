@@ -48,7 +48,7 @@ namespace JobeSharp.Languages
 
             var command = interpreted.GetRunnableCommandOfScript(scriptFilePath);
             
-            return new RunExecutionResult(SandboxExecutor.Execute(command));
+            return new RunExecutionResult(SandboxExecutor.Execute(command, new RunOptions { WorkingDirectory = WorkTempDirectory }));
         }
 
         private ExecutionResult ExecuteCompiled(ICompiled compiled)
@@ -58,14 +58,14 @@ namespace JobeSharp.Languages
 
             var compilationCommand = compiled.GetCompilationCommandBySourceCode(sourceCodePath, Path.Combine(WorkTempDirectory, compiled.CompiledFileName));
             
-            var compileExecutionResult = new CompileExecutionResult(SandboxExecutor.Execute(compilationCommand));
+            var compileExecutionResult = new CompileExecutionResult(SandboxExecutor.Execute(compilationCommand, new RunOptions { WorkingDirectory = WorkTempDirectory }));
             if (!compileExecutionResult.IsSuccess)
             {
                 return compileExecutionResult;
             }
 
             return new RunExecutionResult(
-                SandboxExecutor.Execute(Path.Combine(WorkTempDirectory, compiled.CompiledFileName)));
+                SandboxExecutor.Execute(Path.Combine(WorkTempDirectory, compiled.CompiledFileName), new RunOptions { WorkingDirectory = WorkTempDirectory }));
         }
 
         public void Dispose()
