@@ -13,16 +13,18 @@ namespace JobeSharp.Sandbox
             {
                 throw new ArgumentException(nameof(command));
             }
+
+            var workingDirectory = runOptions?.WorkingDirectory ?? Environment.CurrentDirectory;
             
             var parsedCommandData = command.Split(" ").ToList();
-            var commandFilePath = TryGetFileFromPath(parsedCommandData.First());
+            var commandFilePath = TryGetFileFromPath(workingDirectory, parsedCommandData.First());
             var arguments = string.Join(" ", parsedCommandData.Skip(1));
             
             var process = Process.Start(new ProcessStartInfo
             {
                 FileName = $"{Environment.CurrentDirectory}/Sandbox/RunGuard/runguard",
                 Arguments = $"{runOptions?.ToArgumentsString()} {commandFilePath} {arguments}",
-                WorkingDirectory = runOptions?.WorkingDirectory ?? Environment.CurrentDirectory,
+                WorkingDirectory = workingDirectory,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -34,17 +36,17 @@ namespace JobeSharp.Sandbox
             return process;
         }
 
-        private static string TryGetFileFromPath(string fileName)
+        private static string TryGetFileFromPath(string workingDirectory, string fileName)
         {
-            if (File.Exists(fileName))
+            if (File.Exists(Path.Combine(workingDirectory, fileName)))
             {
-                return Path.GetFullPath(fileName);
+                return Path.Combine(workingDirectory, fileName);
             }
             
             var environmentPath = Environment.GetEnvironmentVariable("PATH");
             if (string.IsNullOrEmpty(environmentPath))
             {
-                return Path.GetFullPath(fileName);
+                return Path.Combine(workingDirectory, fileName);
             }
             
             var paths = environmentPath.Split(Path.PathSeparator);
@@ -53,7 +55,7 @@ namespace JobeSharp.Sandbox
                 .Select(x => Path.Combine(x, fileName))
                 .FirstOrDefault(File.Exists);
             
-            return exePath ?? Path.GetFullPath(fileName);
+            return exePath ?? Path.Combine(workingDirectory, fileName);
         }
     }
 }
