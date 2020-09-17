@@ -6,6 +6,6 @@ branches:
     - master
       
 script: 
-  - docker build -t devgavrilov/coderunner-jobe-sharp-server
+  - docker build -t devgavrilov/coderunner-jobe-sharp-server .
   - docker login -u $DOCKER_USER -p $DOCKER_TOKEN
   - docker push devgavrilov/coderunner-jobe-sharp-server
