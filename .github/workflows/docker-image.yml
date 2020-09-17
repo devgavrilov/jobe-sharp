@@ -15,3 +15,4 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
         repository: devgavrilov/coderunner-jobe-sharp-server
+        path: $GITHUB_WORKSPACE
