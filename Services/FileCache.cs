@@ -7,7 +7,7 @@ namespace JobeSharp.Services
 {
     public class FileCache
     {
-        private static string TempDirectory { get; } = Path.Combine(Path.GetTempPath(), "jobe");
+        private static string TempDirectory { get; } = Path.Combine(Path.GetTempPath(), "jobe", "cache");
         private static TimeSpan TTL { get; } = TimeSpan.FromDays(1);
 
         static FileCache()
