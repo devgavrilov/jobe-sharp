@@ -2,6 +2,7 @@
 using System.Linq;
 using JobeSharp.DTO;
 using JobeSharp.Languages;
+using JobeSharp.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JobeSharp.Controllers
@@ -11,10 +12,12 @@ namespace JobeSharp.Controllers
     public class RunsController : ControllerBase
     {
         private LanguageRegistry LanguageRegistry { get; }
+        private FileCache FileCache { get; }
         
-        public RunsController(LanguageRegistry languageRegistry)
+        public RunsController(LanguageRegistry languageRegistry, FileCache fileCache)
         {
             LanguageRegistry = languageRegistry;
+            FileCache = fileCache;
         }
 
         [HttpPost]
@@ -24,10 +27,12 @@ namespace JobeSharp.Controllers
             {
                 Language = LanguageRegistry.Languages.Single(l => l.Name == runDto.RunSpec.LanguageName),
                 SourceCode = runDto.RunSpec.SourceCode,
-                SourceFileName = runDto.RunSpec.SourceFileName
+                SourceFileName = runDto.RunSpec.SourceFileName,
+                CachedFilesIdPath = runDto.RunSpec.FileList.ToDictionary(a => a[0], a => a[1]),
+                Debug = runDto.RunSpec.Debug
             };
             
-            using var executor = new LanguageExecutor(task);
+            using var executor = new LanguageExecutor(task, FileCache);
             var result = executor.Execute();
 
             return result switch

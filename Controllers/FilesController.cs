@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 using JobeSharp.DTO;
 using JobeSharp.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -31,7 +30,7 @@ namespace JobeSharp.Controllers
         [HttpPut("{key}")]
         public ActionResult SaveFile(string key, FileDto fileDto)
         {
-            FileCache.Write(key, Encoding.Default.GetString(Convert.FromBase64String(fileDto.FileContents)));
+            FileCache.Write(key, Convert.FromBase64String(fileDto.FileContents));
             return NoContent();
         }
     }

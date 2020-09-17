@@ -16,7 +16,6 @@ namespace JobeSharp.Services
             {
                 Directory.CreateDirectory(TempDirectory);
             }
-            Console.WriteLine(TempDirectory);
         }
 
         public bool IsKeyExists(string key)
@@ -28,8 +27,25 @@ namespace JobeSharp.Services
         {
             return File.ReadAllText(GetFilePathByKey(key));
         }
+
+        public byte[] ReadBytes(string key)
+        {
+            return File.ReadAllBytes(GetFilePathByKey(key));
+        }
         
         public void Write(string key, string value)
+        {
+            DeleteOldFiles();
+            File.WriteAllText(GetFilePathByKey(key), value);
+        }
+        
+        public void Write(string key, byte[] value)
+        {
+            DeleteOldFiles();
+            File.WriteAllBytes(GetFilePathByKey(key), value);
+        }
+
+        private void DeleteOldFiles()
         {
             foreach (var file in Directory.EnumerateFiles(TempDirectory))
             {
@@ -38,8 +54,6 @@ namespace JobeSharp.Services
                     File.Delete(file);
                 }
             }
-
-            File.WriteAllText(GetFilePathByKey(key), value);
         }
 
         private string GetFilePathByKey(string key)
