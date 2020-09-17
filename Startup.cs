@@ -1,3 +1,4 @@
+using JobeSharp.Languages;
 using JobeSharp.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -22,6 +23,7 @@ namespace JobeSharp
             services.AddControllers();
 
             services.AddSingleton<FileCache>();
+            services.AddSingleton<LanguageRegistry>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
