@@ -1,9 +1,9 @@
 ﻿namespace JobeSharp.Languages.Abstract
 {
-    public interface ICompiled
+    internal interface ICompiled
     {
-        string CompiledFileName { get; }
-        
-        string GetCompilationCommandBySourceCode(string sourceFilePath, string compiledFilePath);
+        string GetCompilationCommand(ExecutionTask task);
+
+        string GetRunCommand(ExecutionTask task);
     }
 }

@@ -16,10 +16,10 @@ namespace JobeSharp.Languages
 
         public LanguageExecutor(ExecutionTask task, FileCache fileCache)
         {
+            Directory.CreateDirectory(WorkTempDirectory);
+
             Task = task;
             FileCache = fileCache;
-
-            Directory.CreateDirectory(WorkTempDirectory);
         }
 
         public ExecutionResult Execute()
@@ -53,19 +53,28 @@ namespace JobeSharp.Languages
 
         private ExecutionResult ExecuteCompiled(ICompiled compiled)
         {
-            var sourceCodePath = Path.Combine(WorkTempDirectory, Task.SourceFileName);
             File.WriteAllText(Path.Combine(WorkTempDirectory, Task.SourceFileName), Task.SourceCode);
 
-            var compilationCommand = compiled.GetCompilationCommandBySourceCode(sourceCodePath, Path.Combine(WorkTempDirectory, compiled.CompiledFileName));
+            var compilationCommand = compiled.GetCompilationCommand(Task);
             
-            var compileExecutionResult = new CompileExecutionResult(SandboxExecutor.Execute(compilationCommand, new RunOptions { WorkingDirectory = WorkTempDirectory }));
+            var compileExecutionResult = new CompileExecutionResult(
+                SandboxExecutor.Execute(compilationCommand, 
+                    new RunOptions
+                    {
+                        WorkingDirectory = WorkTempDirectory
+                    }));
+            
             if (!compileExecutionResult.IsSuccess)
             {
                 return compileExecutionResult;
             }
 
             return new RunExecutionResult(
-                SandboxExecutor.Execute(Path.Combine(WorkTempDirectory, compiled.CompiledFileName), new RunOptions { WorkingDirectory = WorkTempDirectory }));
+                SandboxExecutor.Execute(compiled.GetRunCommand(Task), 
+                new RunOptions
+                {
+                    WorkingDirectory = WorkTempDirectory
+                }));
         }
 
         public void Dispose()
