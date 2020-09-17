@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using JobeSharp.DTO;
 using JobeSharp.Languages;
@@ -23,12 +24,15 @@ namespace JobeSharp.Controllers
         [HttpPost]
         public ActionResult Run(RunDto runDto)
         {
+            _ = runDto ?? throw new ArgumentNullException(nameof(runDto));
+            _ = runDto.RunSpec ?? throw new ArgumentNullException(nameof(runDto.RunSpec));
+            
             var task = new ExecutionTask
             {
                 Language = LanguageRegistry.Languages.Single(l => l.Name == runDto.RunSpec.LanguageName),
                 SourceCode = runDto.RunSpec.SourceCode,
                 SourceFileName = runDto.RunSpec.SourceFileName,
-                CachedFilesIdPath = runDto.RunSpec.FileList.ToDictionary(a => a[0], a => a[1]),
+                CachedFilesIdPath = runDto.RunSpec.FileList?.ToDictionary(a => a[0], a => a[1]) ?? new Dictionary<string, string>(),
                 Debug = runDto.RunSpec.Debug
             };
             
