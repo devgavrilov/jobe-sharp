@@ -8,6 +8,7 @@ namespace JobeSharp.Languages
         public ILanguage[] Languages { get; } = {
             new JavaLanguage(),
             new CLanguage(),
+            new CppLanguage(),
             new NodeJsLanguage()
         };
     }
