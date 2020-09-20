@@ -43,6 +43,7 @@ namespace JobeSharp.Languages.Concrete
 
         protected override RunExecutionResult Run(ExecutionTask executionTask)
         {
+            executionTask.ExecuteOptions.StdIn = executionTask.Input;
             executionTask.ExecuteOptions.NumberOfProcesses = Math.Max(executionTask.ExecuteOptions.NumberOfProcesses, 256);
             executionTask.ExecuteOptions.TotalMemoryKb = 0;
 

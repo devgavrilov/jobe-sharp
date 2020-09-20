@@ -22,6 +22,8 @@ namespace JobeSharp.Languages.Concrete
 
         protected override RunExecutionResult Run(ExecutionTask executionTask)
         {
+            executionTask.ExecuteOptions.StdIn = executionTask.Input;
+            
             return new RunExecutionResult(
                 SandboxExecutor.Execute($"main.o {executionTask.GetExecuteArguments()}", executionTask.ExecuteOptions));
         }
