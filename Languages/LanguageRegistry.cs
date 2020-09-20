@@ -9,6 +9,7 @@ namespace JobeSharp.Languages
             new JavaLanguage(),
             new CLanguage(),
             new CppLanguage(),
+            new TestLibLanguage(),
             new NodeJsLanguage()
         };
     }
