@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using JobeSharp.DTO;
 using JobeSharp.Languages;
+using JobeSharp.Sandbox;
 using JobeSharp.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -34,8 +36,53 @@ namespace JobeSharp.Controllers
                 SourceFileName = runDto.RunSpec.SourceFileName,
                 Input = runDto.RunSpec.Input,
                 CachedFilesIdPath = runDto.RunSpec.FileList?.ToDictionary(a => a[0], a => a[1]) ?? new Dictionary<string, string>(),
-                Debug = runDto.RunSpec.Debug
+                Debug = runDto.RunSpec.Debug,
             };
+
+            if (runDto.RunSpec.Parameters != null)
+            {
+                if (runDto.RunSpec.Parameters.ContainsKey("disklimit"))
+                {
+                    task.ExecuteOptions.MergeIntoCurrent(new ExecuteOptions { FileSizeKb = runDto.RunSpec.Parameters["disklimit"].GetInt32() });
+                }
+
+                if (runDto.RunSpec.Parameters.ContainsKey("streamsize"))
+                {
+                    task.ExecuteOptions.MergeIntoCurrent(new ExecuteOptions { StreamSizeKb = runDto.RunSpec.Parameters["streamsize"].GetInt32() });
+                }
+
+                if (runDto.RunSpec.Parameters.ContainsKey("cputime"))
+                {
+                    task.ExecuteOptions.MergeIntoCurrent(new ExecuteOptions { CpuTimeSeconds = runDto.RunSpec.Parameters["cputime"].GetDouble() });
+                }
+
+                if (runDto.RunSpec.Parameters.ContainsKey("memorylimit"))
+                {
+                    task.ExecuteOptions.MergeIntoCurrent(new ExecuteOptions { TotalMemoryKb = runDto.RunSpec.Parameters["memorylimit"].GetInt32() });
+                }
+
+                if (runDto.RunSpec.Parameters.ContainsKey("numprocs"))
+                {
+                    task.ExecuteOptions.MergeIntoCurrent(new ExecuteOptions { NumberOfProcesses = runDto.RunSpec.Parameters["numprocs"].GetInt32() });
+                }
+
+                if (runDto.RunSpec.Parameters.ContainsKey("compileargs"))
+                {
+                    task.CompileArguments = runDto.RunSpec.Parameters["compileargs"].EnumerateArray().Select(e => e.GetString()).ToArray();
+                }
+
+                if (runDto.RunSpec.Parameters.ContainsKey("linkargs"))
+                {
+                    task.LinkArguments = runDto.RunSpec.Parameters["linkargs"].EnumerateArray().Select(e => e.GetString()).ToArray();
+                }
+
+                if (runDto.RunSpec.Parameters.ContainsKey("interpreterargs"))
+                {
+                    task.ExecuteArguments = runDto.RunSpec.Parameters["interpreterargs"].EnumerateArray().Select(e => e.GetString()).ToArray();
+                }
+            }
+            
+            task.ExecuteOptions.MergeIntoCurrent(new ExecuteOptions{ TimeSeconds = task.ExecuteOptions.CpuTimeSeconds * 2 });
             
             using var executor = new LanguageExecutor(task, FileCache);
             var result = executor.Execute();

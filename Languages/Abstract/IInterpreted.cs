@@ -2,6 +2,6 @@
 {
     public interface IInterpreted
     {
-        string GetRunnableCommandOfScript(string scriptFilePath);
+        string GetRunnableCommandOfScript(string scriptFilePath, string executeArguments);
     }
 }

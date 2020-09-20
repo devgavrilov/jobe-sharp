@@ -1,4 +1,5 @@
 ﻿using JobeSharp.Languages.Versions;
+using JobeSharp.Sandbox;
 
 namespace JobeSharp.Languages.Abstract
 {
@@ -15,6 +16,10 @@ namespace JobeSharp.Languages.Abstract
         public virtual string GetCorrectSourceFileName(ExecutionTask task)
         {
             return task.SourceFileName;
+        }
+
+        public virtual void CorrectExecutionOptions(ExecuteOptions executeOptions)
+        {
         }
     }
 }

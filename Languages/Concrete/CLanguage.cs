@@ -1,5 +1,4 @@
-﻿using System.IO;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using JobeSharp.Languages.Abstract;
 using JobeSharp.Languages.Versions;
 
@@ -12,19 +11,19 @@ namespace JobeSharp.Languages.Concrete
         protected override IVersionProvider VersionProvider => 
             new CommandRegexVersionProvider("gcc -v", new Regex("gcc version ([\\d.]+)"));
 
-        public string GetCompilationCommand(ExecutionTask task)
+        public string GetCompilationCommand(ExecutionTask task, string linkArguments, string compileArguments)
         {
-            return $"gcc -Wall -Werror -std=c99 -x c -o {GetCompiledFilePath(task)} {task.SourceFileName}";
+            if (string.IsNullOrWhiteSpace(compileArguments))
+            {
+                compileArguments =  "-Wall -Werror -std=c99 -x c";
+            }
+            
+            return $"gcc {compileArguments} -o main.o {task.SourceFileName} {linkArguments}";
         }
 
-        public string GetRunCommand(ExecutionTask task)
+        public string GetRunCommand(ExecutionTask task, string executeArguments)
         {
-            return GetCompiledFilePath(task);
-        }
-
-        private string GetCompiledFilePath(ExecutionTask task)
-        {
-            return Path.Combine("main.o");
+            return $"main.o {executeArguments}";
         }
     }
 }

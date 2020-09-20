@@ -11,9 +11,9 @@ namespace JobeSharp.Languages.Concrete
         protected override IVersionProvider VersionProvider => 
             new CommandRegexVersionProvider("nodejs -v", new Regex("v([\\d.]+)"));
 
-        public string GetRunnableCommandOfScript(string scriptFilePath)
+        public string GetRunnableCommandOfScript(string scriptFilePath, string executeArguments)
         {
-            return $"nodejs {scriptFilePath}";
+            return $"nodejs {scriptFilePath} {executeArguments}";
         }
     }
 }

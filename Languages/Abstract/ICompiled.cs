@@ -2,8 +2,8 @@
 {
     internal interface ICompiled
     {
-        string GetCompilationCommand(ExecutionTask task);
+        string GetCompilationCommand(ExecutionTask task, string linkArguments, string compileArguments);
 
-        string GetRunCommand(ExecutionTask task);
+        string GetRunCommand(ExecutionTask task, string executeArguments);
     }
 }

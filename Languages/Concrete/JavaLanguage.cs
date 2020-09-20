@@ -1,7 +1,8 @@
-﻿using System.IO;
+﻿using System;
 using System.Text.RegularExpressions;
 using JobeSharp.Languages.Abstract;
 using JobeSharp.Languages.Versions;
+using JobeSharp.Sandbox;
 
 namespace JobeSharp.Languages.Concrete
 {
@@ -28,14 +29,25 @@ namespace JobeSharp.Languages.Concrete
             return result.Success ? result.Groups[2].Value : task.SourceFileName.Replace(".java", "");
         }
 
-        public string GetCompilationCommand(ExecutionTask task)
+        public string GetCompilationCommand(ExecutionTask task, string linkArguments, string compileArguments)
         {
-            return $"javac {task.SourceFileName}";
+            return $"javac {compileArguments} {task.SourceFileName}";
         }
 
-        public string GetRunCommand(ExecutionTask task)
+        public override void CorrectExecutionOptions(ExecuteOptions executeOptions)
         {
-            return $"java {task.SourceFileName.Replace(".java", "")}";
+            executeOptions.NumberOfProcesses = Math.Max(executeOptions.NumberOfProcesses, 256);
+            executeOptions.TotalMemoryKb = 0;
+        }
+
+        public string GetRunCommand(ExecutionTask task, string executeArguments)
+        {
+            if (string.IsNullOrWhiteSpace(executeArguments))
+            {
+                executeArguments = "-Xrs -Xss8m -Xmx200m";
+            }
+            
+            return $"java {task.SourceFileName.Replace(".java", "")} {executeArguments}";
         }
     }
 }

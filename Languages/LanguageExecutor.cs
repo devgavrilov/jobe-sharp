@@ -20,6 +20,7 @@ namespace JobeSharp.Languages
 
             Task = task;
             FileCache = fileCache;
+            Task.ExecuteOptions.WorkingDirectory = WorkTempDirectory;
         }
 
         public ExecutionResult Execute()
@@ -47,42 +48,34 @@ namespace JobeSharp.Languages
             var scriptFilePath = Path.Combine(WorkTempDirectory, Task.SourceFileName);
             File.WriteAllText(Path.Combine(WorkTempDirectory, Task.SourceFileName), Task.SourceCode);
 
-            var runCommand = interpreted.GetRunnableCommandOfScript(scriptFilePath);
-            var runOptions = new RunOptions
-            {
-                WorkingDirectory = WorkTempDirectory,
-                StdIn = Task.Input
-            };
+            Task.ExecuteOptions.StdIn = Task.Input;
+            Task.Language.CorrectExecutionOptions(Task.ExecuteOptions);
             
-            return new RunExecutionResult(SandboxExecutor.Execute(runCommand, runOptions));
+            var executeArguments = string.Join(" ", Task.ExecuteArguments ?? new [] { "" });
+            var runCommand = interpreted.GetRunnableCommandOfScript(scriptFilePath, executeArguments);
+            return new RunExecutionResult(SandboxExecutor.Execute(runCommand, Task.ExecuteOptions));
         }
 
         private ExecutionResult ExecuteCompiled(ICompiled compiled)
         {
             File.WriteAllText(Path.Combine(WorkTempDirectory, Task.SourceFileName), Task.SourceCode);
 
-            var compilationCommand = compiled.GetCompilationCommand(Task);
+            Task.ExecuteOptions.StdIn = Task.Input;
+            Task.Language.CorrectExecutionOptions(Task.ExecuteOptions);
+
+            var linkArguments = string.Join(" ", Task.LinkArguments ?? new [] { "" });
+            var compileArguments = string.Join(" ", Task.CompileArguments ?? new [] { "" });
+            var compilationCommand = compiled.GetCompilationCommand(Task, linkArguments, compileArguments);
             
-            var compileExecutionResult = new CompileExecutionResult(
-                SandboxExecutor.Execute(compilationCommand, 
-                    new RunOptions
-                    {
-                        WorkingDirectory = WorkTempDirectory
-                    }));
-            
+            var compileExecutionResult = new CompileExecutionResult(SandboxExecutor.Execute(compilationCommand, Task.ExecuteOptions));
             if (!compileExecutionResult.IsSuccess)
             {
                 return compileExecutionResult;
             }
-
-            var runCommand = compiled.GetRunCommand(Task);
-            var runOptions = new RunOptions
-            {
-                WorkingDirectory = WorkTempDirectory,
-                StdIn = Task.Input
-            };
-
-            return new RunExecutionResult(SandboxExecutor.Execute(runCommand, runOptions));
+            
+            var executeArguments = string.Join(" ", Task.ExecuteArguments ?? new [] { "" });
+            var runCommand = compiled.GetRunCommand(Task, executeArguments);
+            return new RunExecutionResult(SandboxExecutor.Execute(runCommand, Task.ExecuteOptions));
         }
 
         public void Dispose()

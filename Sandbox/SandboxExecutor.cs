@@ -7,14 +7,14 @@ namespace JobeSharp.Sandbox
 {
     internal static class SandboxExecutor
     {
-        public static Process Execute(string command, RunOptions runOptions = null)
+        public static Process Execute(string command, ExecuteOptions executeOptions = null)
         {
             if (string.IsNullOrEmpty(command))
             {
                 throw new ArgumentException(nameof(command));
             }
 
-            var workingDirectory = runOptions?.WorkingDirectory ?? Environment.CurrentDirectory;
+            var workingDirectory = executeOptions?.WorkingDirectory ?? Environment.CurrentDirectory;
             
             var parsedCommandData = command.Split(" ").ToList();
             var commandFilePath = TryGetFileFromPath(workingDirectory, parsedCommandData.First());
@@ -23,7 +23,7 @@ namespace JobeSharp.Sandbox
             var process = Process.Start(new ProcessStartInfo
             {
                 FileName = $"{Environment.CurrentDirectory}/Sandbox/RunGuard/runguard",
-                Arguments = $"{runOptions?.ToArgumentsString()} {commandFilePath} {arguments}",
+                Arguments = $"{executeOptions?.ToArgumentsString()} {commandFilePath} {arguments}",
                 WorkingDirectory = workingDirectory,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
@@ -32,9 +32,9 @@ namespace JobeSharp.Sandbox
                 CreateNoWindow = true
             });
 
-            if (!string.IsNullOrEmpty(runOptions?.StdIn))
+            if (!string.IsNullOrEmpty(executeOptions?.StdIn))
             {
-                process.StandardInput.Write(runOptions.StdIn);
+                process.StandardInput.Write(executeOptions.StdIn);
                 process.StandardInput.Flush();
             }
             
