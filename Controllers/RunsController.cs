@@ -31,7 +31,6 @@ namespace JobeSharp.Controllers
             
             var task = new ExecutionTask
             {
-                Language = LanguageRegistry.Languages.Single(l => l.Name == runDto.RunSpec.LanguageName),
                 SourceCode = runDto.RunSpec.SourceCode,
                 SourceFileName = runDto.RunSpec.SourceFileName,
                 Input = runDto.RunSpec.Input,
@@ -83,9 +82,11 @@ namespace JobeSharp.Controllers
             }
             
             task.ExecuteOptions.MergeIntoCurrent(new ExecuteOptions{ TimeSeconds = task.ExecuteOptions.CpuTimeSeconds * 2 });
+
+            var language = LanguageRegistry.Languages.Single(l => l.Name == runDto.RunSpec.LanguageName);
             
             using var executor = new LanguageExecutor(task, FileCache);
-            var result = executor.Execute();
+            var result = executor.Execute(language);
 
             return result switch
             {

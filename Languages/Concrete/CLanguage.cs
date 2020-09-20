@@ -1,29 +1,29 @@
 ﻿using System.Text.RegularExpressions;
 using JobeSharp.Languages.Abstract;
 using JobeSharp.Languages.Versions;
+using JobeSharp.Sandbox;
 
 namespace JobeSharp.Languages.Concrete
 {
-    internal class CLanguage : LanguageBase, ICompiled
+    internal class CLanguage : CompiledLanguage
     {
         public override string Name => "c";
         
         protected override IVersionProvider VersionProvider => 
             new CommandRegexVersionProvider("gcc -v", new Regex("gcc version ([\\d.]+)"));
 
-        public string GetCompilationCommand(ExecutionTask task, string linkArguments, string compileArguments)
+        protected override CompileExecutionResult Compile(ExecutionTask executionTask)
         {
-            if (string.IsNullOrWhiteSpace(compileArguments))
-            {
-                compileArguments =  "-Wall -Werror -std=c99 -x c";
-            }
+            var compileCommand = $"gcc {executionTask.GetCompileArguments("-Wall -Werror -std=c99 -x c")} -o main.o {GetSourceFilePath(executionTask)} {executionTask.GetLinkArguments()}";
             
-            return $"gcc {compileArguments} -o main.o {task.SourceFileName} {linkArguments}";
+            return new CompileExecutionResult(
+                SandboxExecutor.Execute(compileCommand, executionTask.ExecuteOptions));
         }
 
-        public string GetRunCommand(ExecutionTask task, string executeArguments)
+        protected override RunExecutionResult Run(ExecutionTask executionTask)
         {
-            return $"main.o {executeArguments}";
+            return new RunExecutionResult(
+                SandboxExecutor.Execute($"main.o {executionTask.GetExecuteArguments()}", executionTask.ExecuteOptions));
         }
     }
 }

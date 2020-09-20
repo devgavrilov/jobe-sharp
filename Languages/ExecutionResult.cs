@@ -2,7 +2,7 @@
 
 namespace JobeSharp.Languages
 {
-    internal abstract class ExecutionResult
+    public abstract class ExecutionResult
     {
         public bool IsSuccess => ExitCode == 0;
         public int ExitCode { get; }

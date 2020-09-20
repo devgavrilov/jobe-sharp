@@ -1,29 +1,29 @@
 ﻿using System.Text.RegularExpressions;
 using JobeSharp.Languages.Abstract;
 using JobeSharp.Languages.Versions;
+using JobeSharp.Sandbox;
 
 namespace JobeSharp.Languages.Concrete
 {
-    internal class CppLanguage : LanguageBase, ICompiled
+    internal class CppLanguage : CompiledLanguage
     {
         public override string Name => "cpp";
         
         protected override IVersionProvider VersionProvider => 
             new CommandRegexVersionProvider("gcc -v", new Regex("gcc version ([\\d.]+)"));
 
-        public string GetCompilationCommand(ExecutionTask task, string linkArguments, string compileArguments)
+        protected override CompileExecutionResult Compile(ExecutionTask executionTask)
         {
-            if (string.IsNullOrWhiteSpace(compileArguments))
-            {
-                compileArguments =  "-Wall -Werror";
-            }
+            var compileCommand = $"g++ {executionTask.GetCompileArguments("-Wall -Werror -x c++")} -o main.o {GetSourceFilePath(executionTask)} {executionTask.GetLinkArguments()}";
             
-            return $"g++ {compileArguments} -o main.o {task.SourceFileName} {linkArguments}";
+            return new CompileExecutionResult(
+                SandboxExecutor.Execute(compileCommand, executionTask.ExecuteOptions));
         }
 
-        public string GetRunCommand(ExecutionTask task, string executeArguments)
+        protected override RunExecutionResult Run(ExecutionTask executionTask)
         {
-            return $"main.o {executeArguments}";
+            return new RunExecutionResult(
+                SandboxExecutor.Execute($"main.o {executionTask.GetExecuteArguments()}", executionTask.ExecuteOptions));
         }
     }
 }

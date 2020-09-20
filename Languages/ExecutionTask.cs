@@ -1,12 +1,11 @@
-﻿using System.Collections.Generic;
-using JobeSharp.Languages.Abstract;
+﻿using System;
+using System.Collections.Generic;
 using JobeSharp.Sandbox;
 
 namespace JobeSharp.Languages
 {
     public class ExecutionTask
     {
-        public ILanguage Language { get; set; }
         public string SourceCode { get; set; }
         public string SourceFileName { get; set; }
         public string Input { get; set; }
@@ -16,8 +15,23 @@ namespace JobeSharp.Languages
         public string[] LinkArguments { get; set; }
         public string[] CompileArguments { get; set; }
         public string[] ExecuteArguments { get; set; }
+
+        public string GetLinkArguments(string defaultArguments = "")
+        {
+            return string.Join(" ", LinkArguments ?? new [] { defaultArguments });
+        }
         
-        public ExecuteOptions ExecuteOptions { get; set; } = new ExecuteOptions
+        public string GetCompileArguments(string defaultArguments = "")
+        {
+            return string.Join(" ", CompileArguments ?? new [] { defaultArguments });
+        }
+        
+        public string GetExecuteArguments(string defaultArguments = "")
+        {
+            return string.Join(" ", ExecuteArguments ?? new [] { defaultArguments });
+        }
+        
+        public ExecuteOptions ExecuteOptions { get; } = new ExecuteOptions
         {
             FileSizeKb = 20 * 1024,
             StreamSizeKb = 2 * 1024,
@@ -25,5 +39,7 @@ namespace JobeSharp.Languages
             TotalMemoryKb = 200 * 1024,
             NumberOfProcesses = 20,
         };
+        
+        public string WorkTempDirectory { get; set; }
     }
 }

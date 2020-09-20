@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Text.RegularExpressions;
 using JobeSharp.Languages.Abstract;
 using JobeSharp.Languages.Versions;
@@ -6,7 +7,7 @@ using JobeSharp.Sandbox;
 
 namespace JobeSharp.Languages.Concrete
 {
-    internal class JavaLanguage : LanguageBase, ICompiled
+    internal class JavaLanguage : CompiledLanguage
     {
         public override string Name => "java";
         
@@ -17,37 +18,38 @@ namespace JobeSharp.Languages.Concrete
             "(^|\\W)public\\s+class\\s+(\\w+)[^{]*\\{.*?(public\\s+static|static\\s+public)\\s+void\\s+main\\s*\\(\\s*String",
             RegexOptions.Multiline | RegexOptions.Singleline);
 
-        public override string GetCorrectSourceFileName(ExecutionTask task)
+        protected override string GetSourceFilePath(ExecutionTask executionTask)
         {
-            return $"{TryParseMainClassNameFromSource(task)}.java";
+            return Path.Combine(executionTask.WorkTempDirectory, $"{TryParseMainClassNameFromSource(executionTask)}.java");
         }
 
-        private string TryParseMainClassNameFromSource(ExecutionTask task)
+        private string TryParseMainClassNameFromSource(ExecutionTask executionTask)
         {
-            var result = ClassNameParseRegex.Match(task.SourceCode);
+            var result = ClassNameParseRegex.Match(executionTask.SourceCode);
 
-            return result.Success ? result.Groups[2].Value : task.SourceFileName.Replace(".java", "");
+            return result.Success ? result.Groups[2].Value : executionTask.SourceFileName.Replace(".java", "");
         }
 
-        public string GetCompilationCommand(ExecutionTask task, string linkArguments, string compileArguments)
+        protected override CompileExecutionResult Compile(ExecutionTask executionTask)
         {
-            return $"javac {compileArguments} {task.SourceFileName}";
-        }
-
-        public override void CorrectExecutionOptions(ExecuteOptions executeOptions)
-        {
-            executeOptions.NumberOfProcesses = Math.Max(executeOptions.NumberOfProcesses, 256);
-            executeOptions.TotalMemoryKb = 0;
-        }
-
-        public string GetRunCommand(ExecutionTask task, string executeArguments)
-        {
-            if (string.IsNullOrWhiteSpace(executeArguments))
-            {
-                executeArguments = "-Xrs -Xss8m -Xmx200m";
-            }
+            executionTask.ExecuteOptions.NumberOfProcesses = Math.Max(executionTask.ExecuteOptions.NumberOfProcesses, 256);
+            executionTask.ExecuteOptions.TotalMemoryKb = 0;
             
-            return $"java {task.SourceFileName.Replace(".java", "")} {executeArguments}";
+            var compileCommand = $"javac {executionTask.GetCompileArguments()} {GetSourceFilePath(executionTask)}";
+            
+            return new CompileExecutionResult(
+                SandboxExecutor.Execute(compileCommand, executionTask.ExecuteOptions));
+        }
+
+        protected override RunExecutionResult Run(ExecutionTask executionTask)
+        {
+            executionTask.ExecuteOptions.NumberOfProcesses = Math.Max(executionTask.ExecuteOptions.NumberOfProcesses, 256);
+            executionTask.ExecuteOptions.TotalMemoryKb = 0;
+
+            var compiledFilePath = Path.GetFileName(GetSourceFilePath(executionTask).Replace(".java", ""));
+            
+            return new RunExecutionResult(
+                SandboxExecutor.Execute($"java {compiledFilePath} {executionTask.GetExecuteArguments("-Xrs -Xss8m -Xmx200m")}", executionTask.ExecuteOptions));
         }
     }
 }

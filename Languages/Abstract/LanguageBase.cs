@@ -1,5 +1,5 @@
-﻿using JobeSharp.Languages.Versions;
-using JobeSharp.Sandbox;
+﻿using System.IO;
+using JobeSharp.Languages.Versions;
 
 namespace JobeSharp.Languages.Abstract
 {
@@ -13,13 +13,15 @@ namespace JobeSharp.Languages.Abstract
 
         protected abstract IVersionProvider VersionProvider { get; }
 
-        public virtual string GetCorrectSourceFileName(ExecutionTask task)
+        public virtual ExecutionResult Execute(ExecutionTask executionTask)
         {
-            return task.SourceFileName;
+            File.WriteAllText(GetSourceFilePath(executionTask), executionTask.SourceCode);
+            return new RunExecutionResult(exitCode: 0, output: "", error: "");
         }
 
-        public virtual void CorrectExecutionOptions(ExecuteOptions executeOptions)
+        protected virtual string GetSourceFilePath(ExecutionTask executionTask)
         {
+            return Path.Combine(executionTask.WorkTempDirectory, executionTask.SourceFileName);
         }
     }
 }

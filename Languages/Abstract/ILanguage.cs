@@ -1,6 +1,4 @@
-﻿using JobeSharp.Sandbox;
-
-namespace JobeSharp.Languages.Abstract
+﻿namespace JobeSharp.Languages.Abstract
 {
     public interface ILanguage
     {
@@ -8,7 +6,6 @@ namespace JobeSharp.Languages.Abstract
         string Version { get; }
         bool IsInstalled { get; }
 
-        string GetCorrectSourceFileName(ExecutionTask task);
-        void CorrectExecutionOptions(ExecuteOptions executeOptions);
+        ExecutionResult Execute(ExecutionTask executionTask);
     }
 }
