@@ -10,6 +10,7 @@ namespace JobeSharp.Languages
             new CLanguage(),
             new CppLanguage(),
             new TestLibLanguage(),
+            new Python3Language(),
             new NodeJsLanguage()
         };
     }
