@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace JobeSharp.DTO
@@ -27,7 +28,7 @@ namespace JobeSharp.DTO
         public string[][] FileList { get; set; }
         
         [JsonPropertyName("parameters")]
-        public Dictionary<string, string> Parameters { get; set; }
+        public Dictionary<string, JsonElement> Parameters { get; set; }
         
         [JsonPropertyName("debug")]
         public bool Debug { get; set; }
