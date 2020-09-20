@@ -8,7 +8,7 @@ namespace JobeSharp.Sandbox
         public string Root { get; set; }
         public string User { get; set; }
         public string Group { get; set; }
-        public double TimeSeconds { get; set; }
+        public double TimeSeconds { get; set; } = 5;
         public double CpuTimeSeconds { get; set; }
         public int TotalMemoryKb { get; set; }
         public int FileSizeKb { get; set; }
@@ -17,6 +17,7 @@ namespace JobeSharp.Sandbox
         public bool NoCoreDumps { get; set; }
         public string StdOutFile { get; set; }
         public string StdErrFile { get; set; }
+        public string StdIn { get; set; }
         public int StreamSizeKb { get; set; }
         public string OutExitFile { get; set; }
         public string OutTimeFile { get; set; }

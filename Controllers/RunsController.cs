@@ -32,6 +32,7 @@ namespace JobeSharp.Controllers
                 Language = LanguageRegistry.Languages.Single(l => l.Name == runDto.RunSpec.LanguageName),
                 SourceCode = runDto.RunSpec.SourceCode,
                 SourceFileName = runDto.RunSpec.SourceFileName,
+                Input = runDto.RunSpec.Input,
                 CachedFilesIdPath = runDto.RunSpec.FileList?.ToDictionary(a => a[0], a => a[1]) ?? new Dictionary<string, string>(),
                 Debug = runDto.RunSpec.Debug
             };

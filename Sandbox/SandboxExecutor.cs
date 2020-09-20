@@ -28,8 +28,15 @@ namespace JobeSharp.Sandbox
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
+                RedirectStandardInput = true,
                 CreateNoWindow = true
             });
+
+            if (!string.IsNullOrEmpty(runOptions?.StdIn))
+            {
+                process.StandardInput.Write(runOptions.StdIn);
+                process.StandardInput.Flush();
+            }
             
             process?.WaitForExit();
 

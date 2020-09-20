@@ -47,9 +47,14 @@ namespace JobeSharp.Languages
             var scriptFilePath = Path.Combine(WorkTempDirectory, Task.SourceFileName);
             File.WriteAllText(Path.Combine(WorkTempDirectory, Task.SourceFileName), Task.SourceCode);
 
-            var command = interpreted.GetRunnableCommandOfScript(scriptFilePath);
+            var runCommand = interpreted.GetRunnableCommandOfScript(scriptFilePath);
+            var runOptions = new RunOptions
+            {
+                WorkingDirectory = WorkTempDirectory,
+                StdIn = Task.Input
+            };
             
-            return new RunExecutionResult(SandboxExecutor.Execute(command, new RunOptions { WorkingDirectory = WorkTempDirectory }));
+            return new RunExecutionResult(SandboxExecutor.Execute(runCommand, runOptions));
         }
 
         private ExecutionResult ExecuteCompiled(ICompiled compiled)
@@ -70,12 +75,14 @@ namespace JobeSharp.Languages
                 return compileExecutionResult;
             }
 
-            return new RunExecutionResult(
-                SandboxExecutor.Execute(compiled.GetRunCommand(Task), 
-                new RunOptions
-                {
-                    WorkingDirectory = WorkTempDirectory
-                }));
+            var runCommand = compiled.GetRunCommand(Task);
+            var runOptions = new RunOptions
+            {
+                WorkingDirectory = WorkTempDirectory,
+                StdIn = Task.Input
+            };
+
+            return new RunExecutionResult(SandboxExecutor.Execute(runCommand, runOptions));
         }
 
         public void Dispose()
