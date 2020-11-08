@@ -1,30 +1,52 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
+using Hangfire;
 using JobeSharp.DTO;
 using JobeSharp.Languages;
+using JobeSharp.Model;
 using JobeSharp.Sandbox;
 using JobeSharp.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 
 namespace JobeSharp.Controllers
 {
-    [Route("/jobe/index.php/restapi/runs")]
+    [Route("/jobe/index.php/restapi/")]
     [ApiController]
     public class RunsController : ControllerBase
     {
+        private static readonly SemaphoreSlim Semaphore = new SemaphoreSlim(Environment.ProcessorCount);
+        
         private LanguageRegistry LanguageRegistry { get; }
         private FileCache FileCache { get; }
+        private ApplicationDbContext ApplicationDbContext { get; }
         
-        public RunsController(LanguageRegistry languageRegistry, FileCache fileCache)
+        public RunsController(LanguageRegistry languageRegistry, FileCache fileCache, ApplicationDbContext applicationDbContext)
         {
             LanguageRegistry = languageRegistry;
             FileCache = fileCache;
+            ApplicationDbContext = applicationDbContext;
         }
 
-        [HttpPost]
-        public ActionResult Run(RunDto runDto)
+        [HttpGet("runresults/{jobId}")]
+        public async Task<ActionResult> GetRunResult(Guid jobId)
+        {
+            var run = await ApplicationDbContext.Runs.SingleAsync(r => r.JobId == jobId);
+
+            if (run.State != RunState.Completed)
+            {
+                return NoContent();
+            }
+            
+            return Ok(JsonConvert.DeserializeObject<ResultDto>(run.SerializedExecutionResult));
+        }
+
+        [HttpPost("runs")]
+        public async Task<ActionResult> Run(RunDto runDto)
         {
             _ = runDto ?? throw new ArgumentNullException(nameof(runDto));
             _ = runDto.RunSpec ?? throw new ArgumentNullException(nameof(runDto.RunSpec));
@@ -83,31 +105,63 @@ namespace JobeSharp.Controllers
             
             task.ExecuteOptions.MergeIntoCurrent(new ExecuteOptions{ TimeSeconds = task.ExecuteOptions.CpuTimeSeconds * 2 });
 
-            var language = LanguageRegistry.Languages.Single(l => l.Name == runDto.RunSpec.LanguageName);
-            
-            using var executor = new LanguageExecutor(task, FileCache);
-            var result = executor.Execute(language);
-
-            return result switch
+            var run = new Run
             {
-                RunExecutionResult _ => Ok(new ResultDto
-                {
-                    CmpInfo = "",
-                    StdErr = result.Error,
-                    StdOut = result.Output,
-                    RunId = null,
-                    Outcome = GetOutcomeByExecutionResult(result),
-                }),
-                CompileExecutionResult _ => Ok(new ResultDto
-                {
-                    CmpInfo = result.Error,
-                    StdErr = "",
-                    StdOut = result.Output,
-                    RunId = null,
-                    Outcome = GetOutcomeByExecutionResult(result),
-                }),
-                _ => throw new NotImplementedException()
+                LanguageName = runDto.RunSpec.LanguageName,
+                SerializedTask = JsonConvert.SerializeObject(task)
             };
+            await ApplicationDbContext.Runs.AddAsync(run);
+            
+            var jobId = BackgroundJob.Enqueue(() => ProcessTask(run.Id));
+            run.JobId = Guid.Parse(jobId);
+            await ApplicationDbContext.SaveChangesAsync();
+            
+            return Accepted(new { RunId = jobId });
+        }
+
+        public async Task ProcessTask(int runId)
+        {
+            await Semaphore.WaitAsync();
+
+            try
+            {
+                var run = await ApplicationDbContext.Runs.FindAsync(runId);
+                run.State = RunState.Processing;
+                await ApplicationDbContext.SaveChangesAsync();
+            
+                var language = LanguageRegistry.Languages.Single(l => l.Name == run.LanguageName);
+                var task = JsonConvert.DeserializeObject<ExecutionTask>(run.SerializedTask);
+            
+                using var executor = new LanguageExecutor(task, FileCache);
+                var result = executor.Execute(language) switch
+                {
+                    RunExecutionResult rer => new ResultDto
+                    {
+                        CmpInfo = "",
+                        StdErr = rer.Error,
+                        StdOut = rer.Output,
+                        RunId = null,
+                        Outcome = GetOutcomeByExecutionResult(rer),
+                    },
+                    CompileExecutionResult cer => new ResultDto
+                    {
+                        CmpInfo = cer.Error,
+                        StdErr = "",
+                        StdOut = cer.Output,
+                        RunId = null,
+                        Outcome = GetOutcomeByExecutionResult(cer),
+                    },
+                    _ => throw new NotImplementedException()
+                };
+
+                run.SerializedExecutionResult = JsonConvert.SerializeObject(result);
+                run.State = RunState.Completed;
+                await ApplicationDbContext.SaveChangesAsync();
+            }
+            finally
+            {
+                Semaphore.Release();
+            }
         }
 
         private int GetOutcomeByExecutionResult(ExecutionResult executionResult)

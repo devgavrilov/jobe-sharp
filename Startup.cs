@@ -1,7 +1,12 @@
+using Hangfire;
+using Hangfire.Dashboard;
+using Hangfire.MemoryStorage;
 using JobeSharp.Languages;
+using JobeSharp.Model;
 using JobeSharp.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -22,6 +27,14 @@ namespace JobeSharp
         {
             services.AddControllers();
 
+            services.AddHangfire(configuration => configuration
+                .UseRecommendedSerializerSettings()
+                .UseMemoryStorage());
+
+            services.AddHangfireServer();
+
+            services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase(databaseName: "Test"));
+            
             services.AddSingleton<FileCache>();
             services.AddSingleton<LanguageRegistry>();
         }
@@ -39,8 +52,12 @@ namespace JobeSharp
             app.UseRouting();
 
             app.UseAuthorization();
-
-            app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+            
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+                endpoints.MapHangfireDashboard(new DashboardOptions { Authorization = new IDashboardAuthorizationFilter[]{  }});
+            });
         }
     }
 }
