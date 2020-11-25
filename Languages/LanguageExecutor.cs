@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using JobeSharp.Languages.Abstract;
 using JobeSharp.Services;
 
@@ -22,6 +23,11 @@ namespace JobeSharp.Languages
             
             ExecutionTask.WorkTempDirectory = WorkTempDirectory;
             ExecutionTask.ExecuteOptions.WorkingDirectory = WorkTempDirectory;
+        }
+
+        public bool CheckCachedFileExistence()
+        {
+            return ExecutionTask.CachedFilesIdPath.Keys.All(id => FileCache.IsKeyExists(id));
         }
 
         public ExecutionResult Execute(ILanguage language)

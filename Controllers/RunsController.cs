@@ -103,6 +103,14 @@ namespace JobeSharp.Controllers
             
             task.ExecuteOptions.MergeIntoCurrent(new ExecuteOptions{ TimeSeconds = task.ExecuteOptions.CpuTimeSeconds * 2 });
 
+            using (var executor = new LanguageExecutor(task, FileCache))
+            {
+                if (!executor.CheckCachedFileExistence())
+                {
+                    return NotFound();
+                }
+            }
+            
             var run = new Run
             {
                 LanguageName = runDto.RunSpec.LanguageName,
