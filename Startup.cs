@@ -1,7 +1,7 @@
 using System;
 using Hangfire;
 using Hangfire.Dashboard;
-using Hangfire.MemoryStorage;
+using Hangfire.PostgreSql;
 using JobeSharp.Languages;
 using JobeSharp.Model;
 using JobeSharp.Services;
@@ -30,14 +30,17 @@ namespace JobeSharp
 
             services.AddHangfire(configuration => configuration
                 .UseRecommendedSerializerSettings()
-                .UseMemoryStorage());
+                .UsePostgreSqlStorage(Environment.GetEnvironmentVariable("ConnectionString")));
 
             services.AddHangfireServer(options =>
             {
                 options.WorkerCount = Environment.ProcessorCount;
             });
 
-            services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase(databaseName: "Test"));
+            services.AddDbContext<ApplicationDbContext>(options =>
+                options
+                    .UseNpgsql(Environment.GetEnvironmentVariable("ConnectionString") ??
+                                  throw new ArgumentNullException("ConnectionString")));
             
             services.AddSingleton<FileCache>();
             services.AddSingleton<LanguageRegistry>();
