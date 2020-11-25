@@ -20,7 +20,7 @@ namespace JobeSharp.Sandbox
             var commandFilePath = TryGetFileFromPath(workingDirectory, parsedCommandData.First());
             var arguments = string.Join(" ", parsedCommandData.Skip(1));
             
-            var process = Process.Start(new ProcessStartInfo
+            using var process = Process.Start(new ProcessStartInfo
             {
                 FileName = $"{Environment.CurrentDirectory}/Sandbox/RunGuard/runguard",
                 Arguments = $"{executeOptions?.ToArgumentsString()} {commandFilePath} {arguments}",
@@ -39,6 +39,7 @@ namespace JobeSharp.Sandbox
             }
             
             process?.WaitForExit();
+            process?.Close();
 
             return process;
         }
