@@ -31,7 +31,7 @@ namespace JobeSharp.Controllers
         }
 
         [HttpGet("runresults/{jobId}")]
-        public async Task<ActionResult> GetRunResult(Guid jobId)
+        public async Task<ActionResult> GetRunResult(string jobId)
         {
             var run = await ApplicationDbContext.Runs.SingleAsync(r => r.JobId == jobId);
 
@@ -117,9 +117,10 @@ namespace JobeSharp.Controllers
                 SerializedTask = JsonConvert.SerializeObject(task)
             };
             await ApplicationDbContext.Runs.AddAsync(run);
-            
+            await ApplicationDbContext.SaveChangesAsync();
+
             var jobId = BackgroundJob.Enqueue(() => ProcessTask(run.Id));
-            run.JobId = Guid.Parse(jobId);
+            run.JobId = jobId;
             await ApplicationDbContext.SaveChangesAsync();
             
             return Accepted(new { RunId = jobId });

@@ -13,7 +13,7 @@ namespace JobeSharp.Model
     {
         public int Id { get; set; }
         public RunState State { get; set; } = RunState.InQueue;
-        public Guid JobId { get; set; }
+        public string JobId { get; set; }
         public string SerializedTask { get; set; }
         public string LanguageName { get; set; }
         public string SerializedExecutionResult { get; set; }
