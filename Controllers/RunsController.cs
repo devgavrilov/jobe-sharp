@@ -19,8 +19,6 @@ namespace JobeSharp.Controllers
     [ApiController]
     public class RunsController : ControllerBase
     {
-        private static readonly SemaphoreSlim Semaphore = new SemaphoreSlim(Environment.ProcessorCount);
-        
         private LanguageRegistry LanguageRegistry { get; }
         private FileCache FileCache { get; }
         private ApplicationDbContext ApplicationDbContext { get; }
@@ -121,47 +119,38 @@ namespace JobeSharp.Controllers
 
         public async Task ProcessTask(int runId)
         {
-            await Semaphore.WaitAsync();
-
-            try
+            var run = await ApplicationDbContext.Runs.FindAsync(runId);
+            run.State = RunState.Processing;
+            await ApplicationDbContext.SaveChangesAsync();
+        
+            var language = LanguageRegistry.Languages.Single(l => l.Name == run.LanguageName);
+            var task = JsonConvert.DeserializeObject<ExecutionTask>(run.SerializedTask);
+        
+            using var executor = new LanguageExecutor(task, FileCache);
+            var result = executor.Execute(language) switch
             {
-                var run = await ApplicationDbContext.Runs.FindAsync(runId);
-                run.State = RunState.Processing;
-                await ApplicationDbContext.SaveChangesAsync();
-            
-                var language = LanguageRegistry.Languages.Single(l => l.Name == run.LanguageName);
-                var task = JsonConvert.DeserializeObject<ExecutionTask>(run.SerializedTask);
-            
-                using var executor = new LanguageExecutor(task, FileCache);
-                var result = executor.Execute(language) switch
+                RunExecutionResult rer => new ResultDto
                 {
-                    RunExecutionResult rer => new ResultDto
-                    {
-                        CmpInfo = "",
-                        StdErr = rer.Error,
-                        StdOut = rer.Output,
-                        RunId = null,
-                        Outcome = GetOutcomeByExecutionResult(rer),
-                    },
-                    CompileExecutionResult cer => new ResultDto
-                    {
-                        CmpInfo = cer.Error,
-                        StdErr = "",
-                        StdOut = cer.Output,
-                        RunId = null,
-                        Outcome = GetOutcomeByExecutionResult(cer),
-                    },
-                    _ => throw new NotImplementedException()
-                };
+                    CmpInfo = "",
+                    StdErr = rer.Error,
+                    StdOut = rer.Output,
+                    RunId = null,
+                    Outcome = GetOutcomeByExecutionResult(rer),
+                },
+                CompileExecutionResult cer => new ResultDto
+                {
+                    CmpInfo = cer.Error,
+                    StdErr = "",
+                    StdOut = cer.Output,
+                    RunId = null,
+                    Outcome = GetOutcomeByExecutionResult(cer),
+                },
+                _ => throw new NotImplementedException()
+            };
 
-                run.SerializedExecutionResult = JsonConvert.SerializeObject(result);
-                run.State = RunState.Completed;
-                await ApplicationDbContext.SaveChangesAsync();
-            }
-            finally
-            {
-                Semaphore.Release();
-            }
+            run.SerializedExecutionResult = JsonConvert.SerializeObject(result);
+            run.State = RunState.Completed;
+            await ApplicationDbContext.SaveChangesAsync();
         }
 
         private int GetOutcomeByExecutionResult(ExecutionResult executionResult)

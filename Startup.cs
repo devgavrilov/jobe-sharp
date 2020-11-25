@@ -1,3 +1,4 @@
+using System;
 using Hangfire;
 using Hangfire.Dashboard;
 using Hangfire.MemoryStorage;
@@ -31,7 +32,10 @@ namespace JobeSharp
                 .UseRecommendedSerializerSettings()
                 .UseMemoryStorage());
 
-            services.AddHangfireServer();
+            services.AddHangfireServer(options =>
+            {
+                options.WorkerCount = Environment.ProcessorCount;
+            });
 
             services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase(databaseName: "Test"));
             
