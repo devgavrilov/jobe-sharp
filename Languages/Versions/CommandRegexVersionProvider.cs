@@ -17,13 +17,13 @@ namespace JobeSharp.Languages.Versions
 
         public string GetVersion()
         {
-            var executedProcess = SandboxExecutor.Execute(Command);
-            if (executedProcess.ExitCode != 0)
+            var executionResult = SandboxExecutor.Execute(Command);
+            if (executionResult.ExitCode != 0)
             {
                 throw new InvalidOperationException("Can't use not installed language.");
             }
             
-            var match = VersionParser.Match(executedProcess.StandardOutput.ReadToEnd() + executedProcess.StandardError.ReadToEnd());
+            var match = VersionParser.Match(executionResult.Output + executionResult.Error);
             if (!match.Success)
             {
                 throw new InvalidOperationException("Can't find version by using regex.");

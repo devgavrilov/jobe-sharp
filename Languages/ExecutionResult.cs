@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-namespace JobeSharp.Languages
+﻿namespace JobeSharp.Languages
 {
     public abstract class ExecutionResult
     {
@@ -9,8 +7,8 @@ namespace JobeSharp.Languages
         public string Output { get; }
         public string Error { get; }
 
-        protected ExecutionResult(Process process)
-            : this(process.ExitCode, process.StandardOutput.ReadToEnd(), process.StandardError.ReadToEnd())
+        protected ExecutionResult(Sandbox.ExecutionResult executionResult)
+            : this(executionResult.ExitCode, executionResult.Output, executionResult.Error)
         {
             
         }
@@ -25,7 +23,7 @@ namespace JobeSharp.Languages
 
     internal class RunExecutionResult : ExecutionResult
     {
-        public RunExecutionResult(Process process) : base(process)
+        public RunExecutionResult(Sandbox.ExecutionResult executionResult) : base(executionResult)
         {
         }
 
@@ -36,7 +34,7 @@ namespace JobeSharp.Languages
 
     internal class CompileExecutionResult : ExecutionResult
     {
-        public CompileExecutionResult(Process process) : base(process)
+        public CompileExecutionResult(Sandbox.ExecutionResult executionResult) : base(executionResult)
         {
         }
 

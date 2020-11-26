@@ -7,7 +7,7 @@ namespace JobeSharp.Sandbox
 {
     internal static class SandboxExecutor
     {
-        public static Process Execute(string command, ExecuteOptions executeOptions = null)
+        public static ExecutionResult Execute(string command, ExecuteOptions executeOptions = null)
         {
             if (string.IsNullOrEmpty(command))
             {
@@ -20,28 +20,30 @@ namespace JobeSharp.Sandbox
             var commandFilePath = TryGetFileFromPath(workingDirectory, parsedCommandData.First());
             var arguments = string.Join(" ", parsedCommandData.Skip(1));
             
+            File.WriteAllText(Path.Join(workingDirectory, "prog.cmd"), $"{commandFilePath} {arguments}");
+            
+            File.WriteAllText(Path.Join(workingDirectory, "sandbox.cmd"), $"{Environment.CurrentDirectory}/Sandbox/RunGuard/runguard {executeOptions?.ToArgumentsString()} {TryGetFileFromPath(workingDirectory, "bash")} {Path.Join(workingDirectory, "prog.cmd")} >{Path.Join(workingDirectory, "prog.out")} 2>{Path.Join(workingDirectory, "prog.err")} <{Path.Join(workingDirectory, "prog.in")}");
+            
+            File.WriteAllText(Path.Join(workingDirectory, "prog.in"), executeOptions?.StdIn ?? "");
+            
             using var process = Process.Start(new ProcessStartInfo
             {
-                FileName = $"{Environment.CurrentDirectory}/Sandbox/RunGuard/runguard",
-                Arguments = $"{executeOptions?.ToArgumentsString()} {commandFilePath} {arguments}",
-                WorkingDirectory = workingDirectory,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                RedirectStandardInput = true,
-                CreateNoWindow = true
+                FileName = TryGetFileFromPath(workingDirectory, "bash"),
+                Arguments = Path.Join(workingDirectory, "sandbox.cmd"),
+                WorkingDirectory = workingDirectory
             });
-
-            if (!string.IsNullOrEmpty(executeOptions?.StdIn))
-            {
-                process.StandardInput.Write(executeOptions.StdIn);
-                process.StandardInput.Flush();
-            }
             
             process?.WaitForExit();
+
+            var result = new ExecutionResult(
+                exitCode: process?.ExitCode ?? 0, 
+                output: File.ReadAllText(Path.Join(workingDirectory, "prog.out")),
+                error: File.ReadAllText(Path.Join(workingDirectory, "prog.err"))
+            );
+            
             process?.Close();
 
-            return process;
+            return result;
         }
 
         private static string TryGetFileFromPath(string workingDirectory, string fileName)
