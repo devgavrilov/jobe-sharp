@@ -97,7 +97,12 @@ namespace JobeSharp.Controllers
 
                 if (runDto.RunSpec.Parameters.ContainsKey("interpreterargs"))
                 {
-                    task.ExecuteArguments = runDto.RunSpec.Parameters["interpreterargs"].EnumerateArray().Select(e => e.GetString()).ToArray();
+                    task.InterpreterArguments = runDto.RunSpec.Parameters["interpreterargs"].EnumerateArray().Select(e => e.GetString()).ToArray();
+                }
+
+                if (runDto.RunSpec.Parameters.ContainsKey("runargs"))
+                {
+                    task.RunArgs = runDto.RunSpec.Parameters["runargs"].EnumerateArray().Select(e => e.GetString()).ToArray();
                 }
             }
             

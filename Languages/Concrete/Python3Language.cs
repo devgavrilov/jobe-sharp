@@ -17,7 +17,7 @@ namespace JobeSharp.Languages.Concrete
             executionTask.ExecuteOptions.StdIn = executionTask.Input;
             executionTask.ExecuteOptions.TotalMemoryKb = 600 * 1024;
 
-            var executeCommand = $"python3 -BE {GetSourceFilePath(executionTask)} {executionTask.GetExecuteArguments()}";
+            var executeCommand = $"python3 {executionTask.GetInterpreterArguments()} -BE {GetSourceFilePath(executionTask)} {executionTask.GetRunArguments()}";
             return new RunExecutionResult(SandboxExecutor.Execute(executeCommand, executionTask.ExecuteOptions));
         }
     }

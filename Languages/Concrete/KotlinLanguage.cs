@@ -33,7 +33,7 @@ namespace JobeSharp.Languages.Concrete
             executionTask.ExecuteOptions.TotalMemoryKb = 0;
             
             return new RunExecutionResult(
-                SandboxExecutor.Execute($"java -jar {executionTask.GetExecuteArguments("-Xrs -Xss8m -Xmx200m")} {GetSourceFilePath(executionTask)}.jar", executionTask.ExecuteOptions));
+                SandboxExecutor.Execute($"java {executionTask.GetInterpreterArguments("-Xrs -Xss8m -Xmx200m")} -jar {GetSourceFilePath(executionTask)}.jar {executionTask.GetRunArguments()}", executionTask.ExecuteOptions));
         }
     }
 }

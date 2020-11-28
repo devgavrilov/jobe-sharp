@@ -52,7 +52,7 @@ namespace JobeSharp.Languages.Concrete
             File.WriteAllText(Path.Combine(executionTask.WorkTempDirectory, "prog.out"), input.Output);
             File.WriteAllText(Path.Combine(executionTask.WorkTempDirectory, "prog.ans"), input.Answer);
 
-            var runResult = SandboxExecutor.Execute($"checker.o {executionTask.GetExecuteArguments()} prog.in prog.out prog.ans prog.res",
+            var runResult = SandboxExecutor.Execute($"checker.o {executionTask.GetRunArguments()} prog.in prog.out prog.ans prog.res",
                 executionTask.ExecuteOptions);
 
             var result = new TestLibResult

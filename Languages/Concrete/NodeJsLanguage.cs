@@ -16,7 +16,7 @@ namespace JobeSharp.Languages.Concrete
         {
             executionTask.ExecuteOptions.StdIn = executionTask.Input;
 
-            var executeCommand = $"nodejs {GetSourceFilePath(executionTask)} {executionTask.GetExecuteArguments()}";
+            var executeCommand = $"nodejs {executionTask.GetInterpreterArguments()} {GetSourceFilePath(executionTask)} {executionTask.GetRunArguments()}";
             return new RunExecutionResult(SandboxExecutor.Execute(executeCommand, executionTask.ExecuteOptions));
         }
     }

@@ -13,7 +13,10 @@ namespace JobeSharp.Languages
         
         public string[] LinkArguments { get; set; }
         public string[] CompileArguments { get; set; }
-        public string[] ExecuteArguments { get; set; }
+        public string[] InterpreterArguments { get; set; }        
+        public string[] RunArgs { get; set; }
+        
+        public string WorkTempDirectory { get; set; }
 
         public string GetLinkArguments(string defaultArguments = "")
         {
@@ -25,9 +28,14 @@ namespace JobeSharp.Languages
             return string.Join(" ", CompileArguments ?? new [] { defaultArguments });
         }
         
-        public string GetExecuteArguments(string defaultArguments = "")
+        public string GetInterpreterArguments(string defaultArguments = "")
         {
-            return string.Join(" ", ExecuteArguments ?? new [] { defaultArguments });
+            return string.Join(" ", InterpreterArguments ?? new [] { defaultArguments });
+        }
+        
+        public string GetRunArguments(string defaultArguments = "")
+        {
+            return string.Join(" ", RunArgs ?? new [] { defaultArguments });
         }
         
         public ExecuteOptions ExecuteOptions { get; } = new ExecuteOptions
@@ -38,7 +46,5 @@ namespace JobeSharp.Languages
             TotalMemoryKb = 200 * 1024,
             NumberOfProcesses = 20,
         };
-        
-        public string WorkTempDirectory { get; set; }
     }
 }

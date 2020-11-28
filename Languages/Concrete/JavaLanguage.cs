@@ -50,7 +50,7 @@ namespace JobeSharp.Languages.Concrete
             var compiledFilePath = Path.GetFileName(GetSourceFilePath(executionTask).Replace(".java", ""));
             
             return new RunExecutionResult(
-                SandboxExecutor.Execute($"java {compiledFilePath} {executionTask.GetExecuteArguments("-Xrs -Xss8m -Xmx200m")}", executionTask.ExecuteOptions));
+                SandboxExecutor.Execute($"java {executionTask.GetInterpreterArguments("-Xrs -Xss8m -Xmx200m")} {compiledFilePath} {executionTask.GetRunArguments()}", executionTask.ExecuteOptions));
         }
     }
 }

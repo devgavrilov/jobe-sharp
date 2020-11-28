@@ -25,7 +25,7 @@ namespace JobeSharp.Languages.Concrete
             executionTask.ExecuteOptions.StdIn = executionTask.Input;
             
             return new RunExecutionResult(
-                SandboxExecutor.Execute($"main.o {executionTask.GetExecuteArguments()}", executionTask.ExecuteOptions));
+                SandboxExecutor.Execute($"main.o {executionTask.GetRunArguments()}", executionTask.ExecuteOptions));
         }
     }
 }
