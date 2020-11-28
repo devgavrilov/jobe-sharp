@@ -3,6 +3,7 @@ COPY ./Sandbox/RunGuard/* /usr/src/
 RUN apt-get update && apt-get install -y libcgroup-dev
 RUN g++ -o /usr/runguard /usr/src/runguard.c -lcgroup
 
+
 FROM mcr.microsoft.com/dotnet/core/sdk:latest AS build-env
 WORKDIR /app
 
@@ -11,6 +12,7 @@ RUN dotnet restore
 
 COPY . ./
 RUN dotnet publish -c Release -o out
+
 
 FROM mcr.microsoft.com/dotnet/core/aspnet:3.1-focal
 
@@ -23,6 +25,8 @@ RUN cd /usr/lib && \
     rm -f kotlinc/bin/*.bat
 
 ENV PATH $PATH:/usr/lib/kotlinc/bin
+
+COPY ./java.policy /etc/java-11-openjdk/security/java.policy
 
 WORKDIR /app
 COPY --from=build-env /app/out .
