@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using JobeSharp.Languages.Versions;
 
 namespace JobeSharp.Languages.Abstract
@@ -7,11 +8,17 @@ namespace JobeSharp.Languages.Abstract
     {
         public abstract string Name { get; }
 
-        public string Version => VersionProvider.GetVersion();
+        public Lazy<string> Version { get; }
 
-        public bool IsInstalled => VersionProvider.CheckAnyVersionExistence();
+        public Lazy<bool> IsInstalled { get; }
 
         protected abstract IVersionProvider VersionProvider { get; }
+
+        protected LanguageBase()
+        {
+            Version = new Lazy<string>(() => VersionProvider.GetVersion());
+            IsInstalled = new Lazy<bool>(() => VersionProvider.CheckAnyVersionExistence());
+        }
 
         public virtual ExecutionResult Execute(ExecutionTask executionTask)
         {

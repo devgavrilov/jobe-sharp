@@ -1,10 +1,12 @@
-﻿namespace JobeSharp.Languages.Abstract
+﻿using System;
+
+namespace JobeSharp.Languages.Abstract
 {
     public interface ILanguage
     {
         string Name { get; }
-        string Version { get; }
-        bool IsInstalled { get; }
+        Lazy<string> Version { get; }
+        Lazy<bool> IsInstalled { get; }
 
         ExecutionResult Execute(ExecutionTask executionTask);
     }

@@ -18,8 +18,8 @@ namespace JobeSharp.Controllers
         [HttpGet]
         public ActionResult GetLanguages()
         {
-            var installedLanguages = LanguageRegistry.Languages.Where(l => l.IsInstalled);
-            return Ok(installedLanguages.Select(l => new [] { l.Name, l.Version }).ToArray());
+            var installedLanguages = LanguageRegistry.Languages.Where(l => l.IsInstalled.Value);
+            return Ok(installedLanguages.Select(l => new [] { l.Name, l.Version.Value }).ToArray());
         }
     }
 }
