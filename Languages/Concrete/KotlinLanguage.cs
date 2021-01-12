@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Text.RegularExpressions;
 using JobeSharp.Languages.Abstract;
 using JobeSharp.Languages.Versions;
@@ -15,6 +16,13 @@ namespace JobeSharp.Languages.Concrete
 
         protected override CompileExecutionResult Compile(ExecutionTask executionTask)
         {
+            if (executionTask.SourceFileName.EndsWith(".kotlin"))
+            {
+                File.Move(
+                    sourceFileName: Path.Combine(executionTask.WorkTempDirectory, executionTask.SourceFileName),
+                    destFileName: Path.Combine(executionTask.WorkTempDirectory, executionTask.SourceFileName.Replace(".kotlin", ".kt")));
+            }
+            
             executionTask.ExecuteOptions.NumberOfProcesses = Math.Max(executionTask.ExecuteOptions.NumberOfProcesses, 512);
             executionTask.ExecuteOptions.TotalMemoryKb = 0;
             executionTask.ExecuteOptions.CpuTimeSeconds = 20;
