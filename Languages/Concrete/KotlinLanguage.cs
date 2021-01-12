@@ -18,9 +18,11 @@ namespace JobeSharp.Languages.Concrete
         {
             if (executionTask.SourceFileName.EndsWith(".kotlin"))
             {
+                var newSourceFileName = executionTask.SourceFileName.Replace(".kotlin", ".kt");
                 File.Move(
                     sourceFileName: Path.Combine(executionTask.WorkTempDirectory, executionTask.SourceFileName),
-                    destFileName: Path.Combine(executionTask.WorkTempDirectory, executionTask.SourceFileName.Replace(".kotlin", ".kt")));
+                    destFileName: Path.Combine(executionTask.WorkTempDirectory, newSourceFileName));
+                executionTask.SourceFileName = newSourceFileName;
             }
             
             executionTask.ExecuteOptions.NumberOfProcesses = Math.Max(executionTask.ExecuteOptions.NumberOfProcesses, 512);
