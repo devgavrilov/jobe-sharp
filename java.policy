@@ -45,4 +45,7 @@ grant {
     permission java.lang.RuntimePermission "setIO";
     permission java.lang.RuntimePermission "createSecurityManager";
     permission java.lang.RuntimePermission "setSecurityManager";
+    permission java.lang.RuntimePermission "setSecurityManager";
+    
+    permission java.io.FilePermission "write";
 };
