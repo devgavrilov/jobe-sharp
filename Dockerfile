@@ -16,7 +16,7 @@ RUN dotnet publish -c Release -o out
 
 FROM mcr.microsoft.com/dotnet/core/aspnet:3.1-focal
 
-RUN apt-get update && apt-get install -y libcgroup-dev gcc default-jdk nodejs python3 wget unzip
+RUN apt-get update && apt-get install -y libcgroup-dev gcc g++ default-jdk nodejs python3 wget unzip
 
 RUN cd /usr/lib && \
     wget -q https://github.com/JetBrains/kotlin/releases/download/v1.4.10/kotlin-compiler-1.4.10.zip && \
