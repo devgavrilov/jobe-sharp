@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
@@ -48,17 +49,17 @@ namespace JobeSharp.Languages.Concrete
         {
             var input = JsonSerializer.Deserialize<TestLibInput>(executionTask.Input);
             
-            File.WriteAllText(Path.Combine(executionTask.WorkTempDirectory, "prog.in"), input.Input);
-            File.WriteAllText(Path.Combine(executionTask.WorkTempDirectory, "prog.out"), input.Output);
-            File.WriteAllText(Path.Combine(executionTask.WorkTempDirectory, "prog.ans"), input.Answer);
+            File.WriteAllText(Path.Combine(executionTask.WorkTempDirectory, "checker.in"), input.Input);
+            File.WriteAllText(Path.Combine(executionTask.WorkTempDirectory, "checker.out"), input.Output);
+            File.WriteAllText(Path.Combine(executionTask.WorkTempDirectory, "checker.ans"), input.Answer);
 
-            var runResult = SandboxExecutor.Execute($"checker.o {executionTask.GetRunArguments()} prog.in prog.out prog.ans prog.res",
+            var runResult = SandboxExecutor.Execute($"checker.o {executionTask.GetRunArguments()} checker.in checker.out checker.ans checker.res",
                 executionTask.ExecuteOptions);
 
             var result = new TestLibResult
             {
                 Code = runResult.ExitCode,
-                Message = File.ReadAllText(Path.Combine(executionTask.WorkTempDirectory, "prog.res"))
+                Message = File.ReadAllText(Path.Combine(executionTask.WorkTempDirectory, "checker.res"))
             };
             
             return new RunExecutionResult(exitCode: 0, output: JsonSerializer.Serialize(result), error: "");
