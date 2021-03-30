@@ -39,7 +39,7 @@ namespace JobeSharp.Languages.Concrete
 
         protected override CompileExecutionResult Compile(ExecutionTask executionTask)
         {
-            var compileCommand = $"g++ {executionTask.GetCompileArguments("-Wall -Werror -x c++")} -o checker.o {GetSourceFilePath(executionTask)} {executionTask.GetLinkArguments()}";
+            var compileCommand = $"g++ {executionTask.GetCompileArguments("-Wall -x c++")} -o checker.o {GetSourceFilePath(executionTask)} {executionTask.GetLinkArguments()}";
             
             return new CompileExecutionResult(
                 SandboxExecutor.Execute(compileCommand, executionTask.ExecuteOptions));
