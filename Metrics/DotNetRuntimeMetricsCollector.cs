@@ -14,7 +14,7 @@ namespace JobeSharp.Metrics
                 .Default()
                 .StartCollecting();
 
-	        await Task.Delay(TimeSpan.MaxValue, stoppingToken);
+	        await Task.Delay(-1, stoppingToken);
         }
     }
 }
