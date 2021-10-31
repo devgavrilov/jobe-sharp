@@ -142,52 +142,65 @@ namespace JobeSharp.Controllers
                 .CreateCounter("runs_tries", "The amount of tries to process runs in the queue")
                 .Inc();
 
-            var run = await ApplicationDbContext.Runs.FindAsync(runId);
-            run.State = RunState.Processing;
-            await ApplicationDbContext.SaveChangesAsync();
-        
-            var language = LanguageRegistry.Languages.Single(l => l.Name == run.LanguageName);
-            var task = JsonConvert.DeserializeObject<ExecutionTask>(run.SerializedTask);
-        
-            using var executor = new LanguageExecutor(task, FileCache);
-            var result = executor.Execute(language) switch
-            {
-                RunExecutionResult rer => new ResultDto
-                {
-                    CmpInfo = "",
-                    StdErr = rer.Error,
-                    StdOut = rer.Output,
-                    RunId = null,
-                    Outcome = GetOutcomeByExecutionResult(rer),
-                },
-                CompileExecutionResult cer => new ResultDto
-                {
-                    CmpInfo = cer.Error,
-                    StdErr = "",
-                    StdOut = cer.Output,
-                    RunId = null,
-                    Outcome = GetOutcomeByExecutionResult(cer),
-                },
-                _ => throw new NotImplementedException()
-            };
-
-            run.SerializedExecutionResult = JsonConvert.SerializeObject(result);
-            run.State = RunState.Completed;
-            await ApplicationDbContext.SaveChangesAsync();
-
-            var histogramConfiguration = new HistogramConfiguration
-            {
-                Buckets = new[] { 0.5, 1, 2, 5, 15, 30, 60, 120, 300, 600, 1200, 1800, 3600 },
-                LabelNames = new[] { "language", "state", "outcome" }
-            };
-
             Prometheus.Metrics
-                .CreateHistogram(
-                    "runs_processed",
-                    "The amount of fully processed runs from the queue",
-                    histogramConfiguration)
-                .WithLabels(run.LanguageName, run.State.ToString(), result.Outcome.ToString())
-                .Observe(DateTime.UtcNow.Subtract(run.CreationDateTimeUtc).TotalSeconds);
+                .CreateCounter("runs_starts", "The amount of starts to process runs in the queue")
+                .Inc();
+
+            try
+            {
+                var run = await ApplicationDbContext.Runs.FindAsync(runId);
+                run.State = RunState.Processing;
+                await ApplicationDbContext.SaveChangesAsync();
+            
+                var language = LanguageRegistry.Languages.Single(l => l.Name == run.LanguageName);
+                var task = JsonConvert.DeserializeObject<ExecutionTask>(run.SerializedTask);
+            
+                using var executor = new LanguageExecutor(task, FileCache);
+                var result = executor.Execute(language) switch
+                {
+                    RunExecutionResult rer => new ResultDto
+                    {
+                        CmpInfo = "",
+                        StdErr = rer.Error,
+                        StdOut = rer.Output,
+                        RunId = null,
+                        Outcome = GetOutcomeByExecutionResult(rer),
+                    },
+                    CompileExecutionResult cer => new ResultDto
+                    {
+                        CmpInfo = cer.Error,
+                        StdErr = "",
+                        StdOut = cer.Output,
+                        RunId = null,
+                        Outcome = GetOutcomeByExecutionResult(cer),
+                    },
+                    _ => throw new NotImplementedException()
+                };
+
+                run.SerializedExecutionResult = JsonConvert.SerializeObject(result);
+                run.State = RunState.Completed;
+                await ApplicationDbContext.SaveChangesAsync();
+
+                var histogramConfiguration = new HistogramConfiguration
+                {
+                    Buckets = new[] { 0.5, 1, 2, 5, 15, 30, 60, 120, 300, 600, 1200, 1800, 3600 },
+                    LabelNames = new[] { "language", "state", "outcome" }
+                };
+
+                Prometheus.Metrics
+                    .CreateHistogram(
+                        "runs_processed",
+                        "The amount of fully processed runs from the queue",
+                        histogramConfiguration)
+                    .WithLabels(run.LanguageName, run.State.ToString(), result.Outcome.ToString())
+                    .Observe(DateTime.UtcNow.Subtract(run.CreationDateTimeUtc).TotalSeconds);
+            }
+            finally
+            {
+                Prometheus.Metrics
+                    .CreateCounter("runs_finishes", "The amount of finishes to process runs in the queue")
+                    .Inc();
+            }
         }
 
         private int GetOutcomeByExecutionResult(ExecutionResult executionResult)
