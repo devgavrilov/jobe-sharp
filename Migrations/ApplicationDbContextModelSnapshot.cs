@@ -46,6 +46,8 @@ namespace JobeSharp.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex(new[] { "CreationDateTimeUtc" }, "IX_CreationDateTimeUtc");
+
                     b.ToTable("Runs");
                 });
 #pragma warning restore 612, 618

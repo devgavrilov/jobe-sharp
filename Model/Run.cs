@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.EntityFrameworkCore;
 
 namespace JobeSharp.Model
 {
@@ -9,6 +10,7 @@ namespace JobeSharp.Model
         Completed
     }
     
+    [Index(nameof(CreationDateTimeUtc), Name = "IX_CreationDateTimeUtc")]
     public class Run
     {
         public int Id { get; set; }
