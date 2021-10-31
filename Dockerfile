@@ -14,7 +14,7 @@ COPY . ./
 RUN dotnet publish -c Release -o out
 
 
-FROM mcr.microsoft.com/dotnet/core/aspnet:3.1-focal
+FROM mcr.microsoft.com/dotnet/core/aspnet:5.0-focal
 
 RUN apt-get update && apt-get install -y libcgroup-dev gcc g++ default-jdk nodejs python3 wget unzip sqlite3
 
