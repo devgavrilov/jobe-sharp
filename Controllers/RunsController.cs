@@ -11,6 +11,7 @@ using JobeSharp.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using Prometheus;
 using ExecutionResult = JobeSharp.Languages.ExecutionResult;
 
 namespace JobeSharp.Controllers
@@ -174,10 +175,19 @@ namespace JobeSharp.Controllers
             run.State = RunState.Completed;
             await ApplicationDbContext.SaveChangesAsync();
 
+            var histogramConfiguration = new HistogramConfiguration
+            {
+                Buckets = new[] { 0.5, 1, 2, 5, 15, 30, 60, 120, 300, 600, 1200, 1800, 3600 },
+                LabelNames = new[] { "language", "state", "outcome" }
+            };
+
             Prometheus.Metrics
-                .CreateCounter("runs_processed", "The amount of fully processed runs from the queue", "state", "outcome")
-                .WithLabels(run.State.ToString(), result.Outcome.ToString())
-                .Inc();
+                .CreateHistogram(
+                    "runs_processed",
+                    "The amount of fully processed runs from the queue",
+                    histogramConfiguration)
+                .WithLabels(run.LanguageName, run.State.ToString(), result.Outcome.ToString())
+                .Observe(DateTime.UtcNow.Subtract(run.CreationDateTimeUtc).TotalSeconds);
         }
 
         private int GetOutcomeByExecutionResult(ExecutionResult executionResult)
