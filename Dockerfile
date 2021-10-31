@@ -4,7 +4,7 @@ RUN apt-get update && apt-get install -y libcgroup-dev
 RUN g++ -o /usr/runguard /usr/src/runguard.c -lcgroup
 
 
-FROM mcr.microsoft.com/dotnet/core/sdk:latest AS build-env
+FROM mcr.microsoft.com/dotnet/core/sdk:5.0-focal AS build-env
 WORKDIR /app
 
 COPY *.csproj ./
