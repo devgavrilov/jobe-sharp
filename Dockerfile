@@ -4,7 +4,7 @@ RUN apt-get update && apt-get install -y libcgroup-dev
 RUN g++ -o /usr/runguard /usr/src/runguard.c -lcgroup
 
 
-FROM mcr.microsoft.com/dotnet/core/sdk:5.0-focal AS build-env
+FROM mcr.microsoft.com/dotnet/sdk:5.0-focal AS build-env
 WORKDIR /app
 
 COPY *.csproj ./
@@ -14,7 +14,7 @@ COPY . ./
 RUN dotnet publish -c Release -o out
 
 
-FROM mcr.microsoft.com/dotnet/core/aspnet:5.0-focal
+FROM mcr.microsoft.com/dotnet/aspnet:5.0-focal
 
 RUN apt-get update && apt-get install -y libcgroup-dev gcc g++ default-jdk nodejs python3 wget unzip sqlite3
 
