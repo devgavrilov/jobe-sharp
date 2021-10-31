@@ -23,25 +23,23 @@ namespace JobeSharp.Services
             return File.Exists(GetFilePathByKey(key));
         }
 
-        public string ReadString(string key)
-        {
-            return File.ReadAllText(GetFilePathByKey(key));
-        }
-
         public byte[] ReadBytes(string key)
         {
             return File.ReadAllBytes(GetFilePathByKey(key));
         }
-        
-        public void Write(string key, string value)
-        {
-            DeleteOldFiles();
-            File.WriteAllText(GetFilePathByKey(key), value);
-        }
-        
+
         public void Write(string key, byte[] value)
         {
             DeleteOldFiles();
+
+            Prometheus.Metrics
+                .CreateCounter("files_written_count", "The amount of written files")
+                .Inc();
+
+            Prometheus.Metrics
+                .CreateCounter("files_written_bytes", "The amount of bytes of written files")
+                .Inc(value.Length);
+
             File.WriteAllBytes(GetFilePathByKey(key), value);
         }
 
@@ -49,10 +47,18 @@ namespace JobeSharp.Services
         {
             foreach (var file in Directory.EnumerateFiles(TempDirectory))
             {
-                if (DateTime.UtcNow.Subtract(File.GetLastWriteTimeUtc(file)) > TTL)
-                {
-                    File.Delete(file);
-                }
+                if (DateTime.UtcNow.Subtract(File.GetLastWriteTimeUtc(file)) <= TTL)
+                    continue;
+
+                Prometheus.Metrics
+                    .CreateCounter("files_deleted_count", "The amount of deleted files")
+                    .Inc();
+
+                Prometheus.Metrics
+                    .CreateCounter("files_deleted_bytes", "The amount of bytes of deleted files")
+                    .Inc(new FileInfo(file).Length);
+
+                File.Delete(file);
             }
         }
 

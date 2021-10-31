@@ -3,6 +3,7 @@ using Hangfire;
 using Hangfire.Dashboard;
 using Hangfire.PostgreSql;
 using JobeSharp.Languages;
+using JobeSharp.Metrics;
 using JobeSharp.Model;
 using JobeSharp.Services;
 using Microsoft.AspNetCore.Builder;
@@ -11,6 +12,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Prometheus;
+using Prometheus.SystemMetrics;
 
 namespace JobeSharp
 {
@@ -32,6 +35,10 @@ namespace JobeSharp
                 .UseRecommendedSerializerSettings()
                 .UsePostgreSqlStorage(Environment.GetEnvironmentVariable("ConnectionString")));
 
+            services.AddHostedService<DotNetRuntimeMetricsCollector>();
+
+            services.AddSystemMetrics();
+            
             services.AddHangfireServer(options =>
             {
                 options.WorkerCount = Environment.ProcessorCount;
@@ -44,6 +51,9 @@ namespace JobeSharp
             
             services.AddSingleton<FileCache>();
             services.AddSingleton<LanguageRegistry>();
+
+            services.AddHealthChecks()
+                .ForwardToPrometheus();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -58,12 +68,15 @@ namespace JobeSharp
 
             app.UseRouting();
 
+            app.UseHttpMetrics();
+
             app.UseAuthorization();
             
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
                 endpoints.MapHangfireDashboard(new DashboardOptions { Authorization = new IDashboardAuthorizationFilter[]{  }});
+                endpoints.MapMetrics();
             });
         }
     }

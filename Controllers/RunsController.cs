@@ -128,11 +128,19 @@ namespace JobeSharp.Controllers
             run.JobId = jobId;
             await ApplicationDbContext.SaveChangesAsync();
             
+            Prometheus.Metrics
+                .CreateCounter("runs_sent_to_queue", "The amount of runs sent to queue")
+                .Inc();
+
             return Accepted(new { RunId = jobId });
         }
 
         public async Task ProcessTask(int runId)
         {
+            Prometheus.Metrics
+                .CreateCounter("runs_tries", "The amount of tries to process runs in the queue")
+                .Inc();
+
             var run = await ApplicationDbContext.Runs.FindAsync(runId);
             run.State = RunState.Processing;
             await ApplicationDbContext.SaveChangesAsync();
@@ -165,6 +173,11 @@ namespace JobeSharp.Controllers
             run.SerializedExecutionResult = JsonConvert.SerializeObject(result);
             run.State = RunState.Completed;
             await ApplicationDbContext.SaveChangesAsync();
+
+            Prometheus.Metrics
+                .CreateCounter("runs_processed", "The amount of fully processed runs from the queue", "state", "outcome")
+                .WithLabels(run.State.ToString(), result.Outcome.ToString())
+                .Inc();
         }
 
         private int GetOutcomeByExecutionResult(ExecutionResult executionResult)
