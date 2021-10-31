@@ -12,6 +12,7 @@ namespace JobeSharp.Languages
             new TestLibLanguage(),
             new Python3Language(),
             new KotlinLanguage(),
+            new PascalLanguage(),
             new NodeJsLanguage()
         };
     }
