@@ -6,10 +6,12 @@ using Hangfire;
 using JobeSharp.DTO;
 using JobeSharp.Languages;
 using JobeSharp.Model;
+using JobeSharp.Runs;
 using JobeSharp.Sandbox;
 using JobeSharp.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 using Prometheus;
 using ExecutionResult = JobeSharp.Languages.ExecutionResult;
@@ -20,30 +22,39 @@ namespace JobeSharp.Controllers
     [ApiController]
     public class RunsController : ControllerBase
     {
+        private readonly IMemoryCache _memoryCache;
+
         private LanguageRegistry LanguageRegistry { get; }
         private FileCache FileCache { get; }
         private ApplicationDbContext ApplicationDbContext { get; }
         
-        public RunsController(LanguageRegistry languageRegistry, FileCache fileCache, ApplicationDbContext applicationDbContext)
+        public RunsController(LanguageRegistry languageRegistry, FileCache fileCache, ApplicationDbContext applicationDbContext, IMemoryCache memoryCache)
         {
             LanguageRegistry = languageRegistry;
             FileCache = fileCache;
             ApplicationDbContext = applicationDbContext;
+            _memoryCache = memoryCache;
         }
 
         [HttpGet("runresults/{jobId}")]
         public async Task<ActionResult> GetRunResult(string jobId)
         {
+            if (_memoryCache.TryGetValue<CachedRun>($"Jobs:{jobId}:CachedRun", out var cachedRun))
+            {
+                if (cachedRun.State != RunState.Completed)
+                    return NoContent();
+                
+                return Ok(cachedRun.Result);
+            }
+
             var run = await ApplicationDbContext.Runs.SingleAsync(r => r.JobId == jobId);
 
             if (run.State != RunState.Completed)
             {
                 return NoContent();
             }
-            
-            return Content(
-                content: JsonConvert.SerializeObject(JsonConvert.DeserializeObject<ResultDto>(run.SerializedExecutionResult)),
-                contentType: "application/json");
+
+            return Ok(JsonConvert.DeserializeObject<ResultDto>(run.SerializedExecutionResult));
         }
 
         [HttpPost("runs")]
@@ -130,6 +141,8 @@ namespace JobeSharp.Controllers
             var jobId = BackgroundJob.Enqueue(() => ProcessTask(run.Id));
             run.JobId = jobId;
             await ApplicationDbContext.SaveChangesAsync();
+
+            var cachedRun = _memoryCache.GetOrCreate($"Jobs:{jobId}:CachedRun", _ => new CachedRun());
             
             Prometheus.Metrics
                 .CreateCounter("runs_sent_to_queue", "The amount of runs sent to queue")
@@ -153,6 +166,9 @@ namespace JobeSharp.Controllers
                 var run = await ApplicationDbContext.Runs.FindAsync(runId);
                 run.State = RunState.Processing;
                 await ApplicationDbContext.SaveChangesAsync();
+
+                var cachedRun = _memoryCache.Get<CachedRun>($"Jobs:{run.JobId}:CachedRun");
+                cachedRun.State = RunState.Processing;
             
                 var language = LanguageRegistry.Languages.Single(l => l.Name == run.LanguageName);
                 var task = JsonConvert.DeserializeObject<ExecutionTask>(run.SerializedTask);
@@ -182,6 +198,9 @@ namespace JobeSharp.Controllers
                 run.SerializedExecutionResult = JsonConvert.SerializeObject(result);
                 run.State = RunState.Completed;
                 await ApplicationDbContext.SaveChangesAsync();
+
+                cachedRun.Result = result;
+                cachedRun.State = RunState.Completed;
 
                 var histogramConfiguration = new HistogramConfiguration
                 {

@@ -1,22 +1,22 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace JobeSharp.DTO
 {
     public class ResultDto
     {
-        [JsonProperty("run_id")]
+        [JsonPropertyName("run_id")]
         public string RunId { get; set; }
         
-        [JsonProperty("outcome")]
+        [JsonPropertyName("outcome")]
         public long Outcome { get; set; }
         
-        [JsonProperty("cmpinfo")]
+        [JsonPropertyName("cmpinfo")]
         public string CmpInfo { get; set; }
         
-        [JsonProperty("stdout")]
+        [JsonPropertyName("stdout")]
         public string StdOut { get; set; }
         
-        [JsonProperty("stderr")]
+        [JsonPropertyName("stderr")]
         public string StdErr { get; set; }
     }
 }

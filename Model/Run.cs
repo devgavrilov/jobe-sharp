@@ -3,13 +3,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JobeSharp.Model
 {
-    public enum RunState
-    {
-        InQueue,
-        Processing,
-        Completed
-    }
-    
     [Index(nameof(CreationDateTimeUtc), Name = "IX_CreationDateTimeUtc")]
     public class Run
     {

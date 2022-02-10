@@ -38,6 +38,11 @@ namespace JobeSharp
             services.AddHostedService<DotNetRuntimeMetricsCollector>();
 
             services.AddSystemMetrics();
+
+            services.AddMemoryCache(options =>
+            {
+                options.SizeLimit = 1024;
+            });
             
             services.AddHangfireServer(options =>
             {
