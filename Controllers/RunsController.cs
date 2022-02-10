@@ -171,7 +171,8 @@ namespace JobeSharp.Controllers
                 await ApplicationDbContext.SaveChangesAsync();
 
                 var cachedRun = _memoryCache.Get<CachedRun>($"Jobs:{run.JobId}:CachedRun");
-                cachedRun.State = RunState.Processing;
+                if (cachedRun != null)
+                    cachedRun.State = RunState.Processing;
             
                 var language = LanguageRegistry.Languages.Single(l => l.Name == run.LanguageName);
                 var task = JsonConvert.DeserializeObject<ExecutionTask>(run.SerializedTask);
@@ -202,8 +203,11 @@ namespace JobeSharp.Controllers
                 run.State = RunState.Completed;
                 await ApplicationDbContext.SaveChangesAsync();
 
-                cachedRun.Result = result;
-                cachedRun.State = RunState.Completed;
+                if (cachedRun != null)
+                {
+                    cachedRun.Result = result;
+                    cachedRun.State = RunState.Completed;
+                }
 
                 var histogramConfiguration = new HistogramConfiguration
                 {
