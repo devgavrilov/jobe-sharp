@@ -142,8 +142,10 @@ namespace JobeSharp.Controllers
             run.JobId = jobId;
             await ApplicationDbContext.SaveChangesAsync();
 
-            var cachedRun = _memoryCache.GetOrCreate($"Jobs:{jobId}:CachedRun", _ => new CachedRun());
-            
+            _memoryCache.CreateEntry($"Jobs:{jobId}:CachedRun")
+                .SetSize(1)
+                .SetValue(new CachedRun());
+
             Prometheus.Metrics
                 .CreateCounter("runs_sent_to_queue", "The amount of runs sent to queue")
                 .Inc();
