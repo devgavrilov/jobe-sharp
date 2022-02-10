@@ -41,7 +41,9 @@ namespace JobeSharp.Controllers
                 return NoContent();
             }
             
-            return Ok(JsonConvert.DeserializeObject<ResultDto>(run.SerializedExecutionResult));
+            return Content(
+                content: JsonConvert.SerializeObject(JsonConvert.DeserializeObject<ResultDto>(run.SerializedExecutionResult)),
+                contentType: "application/json");
         }
 
         [HttpPost("runs")]
