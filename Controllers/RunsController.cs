@@ -144,7 +144,8 @@ namespace JobeSharp.Controllers
 
             _memoryCache.CreateEntry($"Jobs:{jobId}:CachedRun")
                 .SetSize(1)
-                .SetValue(new CachedRun());
+                .SetValue(new CachedRun())
+                .Dispose();
 
             Prometheus.Metrics
                 .CreateCounter("runs_sent_to_queue", "The amount of runs sent to queue")
